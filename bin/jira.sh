@@ -597,7 +597,7 @@ base_branch() {
     b=$(git symbolic-ref --quiet --short refs/remotes/origin/HEAD 2>/dev/null)
     [ -n "$b" ] && { echo "${b#origin/}"; return; }
     for b in main master; do
-        git show-ref --verify --quiet "refs/remotes/origin/$b" && { echo "$b"; return; }
+        git show-ref --verify --quiet "refs/remotes/origin/$b" 2>/dev/null && { echo "$b"; return; }
     done
     echo main
 }

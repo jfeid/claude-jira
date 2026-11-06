@@ -1,7 +1,7 @@
 {
   "name": "jira-worklog",
   "displayName": "Jira Worklog",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Jira ticket workflow for Claude Code: start and close tickets, log timer time as quarter-rounded Jira worklogs, and check day and month reports against Jira. Uses the Atlassian MCP server and the worklog-timer plugin.",
   "author": {
     "name": "Giannis Feidaros",
