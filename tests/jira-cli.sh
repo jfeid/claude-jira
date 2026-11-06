@@ -95,11 +95,12 @@ run "url" 0 url abc-3;     has "https://acme.atlassian.net/browse/ABC-3"
 sed 's/"excludePrefixes": \[\]/"excludePrefixes": ["XYZ", "QQ"]/' "$JIRA_HOME/config.json" > "$TMP/c" && mv "$TMP/c" "$JIRA_HOME/config.json"
 run "config prefixes" 0 config;                         has "exclude_prefixes=XYZ QQ"
 run "excluded by config" 1 key XYZ-9
-mkdir -p "$TMP/nojq"
-for t in bash sh awk sed grep tr head cat date dirname basename mkdir git sort cut find mktemp rm mv; do
-    p=$(command -v "$t") && ln -sf "$p" "$TMP/nojq/$t"
-done
-PATH="$TMP/nojq" run "config without jq" 0 config;     has "exclude_prefixes=XYZ QQ"; has "site_url=https://acme.atlassian.net"
+# The same settings read without jq: `command -v jq` answers "not found"
+# (an exported function, since a PATH without jq breaks Git Bash on Windows).
+command() { [ "$1 $2" = "-v jq" ] && return 1; builtin command "$@"; }
+export -f command
+run "config without jq" 0 config;                      has "exclude_prefixes=XYZ QQ"; has "site_url=https://acme.atlassian.net"
+unset -f command
 
 echo "== figures and ledger"
 run "figures" 0 figures ABC-1
