@@ -1,0 +1,16 @@
+{
+  "name": "claude-jira",
+  "description": "Jira ticket workflow and worklogs for Claude Code",
+  "owner": {
+    "name": "jfeid",
+    "url": "https://github.com/jfeid"
+  },
+  "allowCrossMarketplaceDependenciesOn": ["claude-timer"],
+  "plugins": [
+    {
+      "name": "jira-worklog",
+      "source": "./",
+      "description": "Start and close Jira tickets, log timer time as Jira worklogs, and day and month reports against Jira"
+    }
+  ]
+}

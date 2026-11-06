@@ -1,0 +1,27 @@
+{
+  "name": "jira-worklog",
+  "displayName": "Jira Worklog",
+  "version": "0.1.0",
+  "description": "Jira ticket workflow for Claude Code: start and close tickets, log timer time as quarter-rounded Jira worklogs, and check day and month reports against Jira. Uses the Atlassian MCP server and the worklog-timer plugin.",
+  "author": {
+    "name": "Giannis Feidaros",
+    "email": "info@maxweb.gr",
+    "url": "https://github.com/jfeid"
+  },
+  "homepage": "https://github.com/jfeid/claude-jira",
+  "repository": "https://github.com/jfeid/claude-jira",
+  "documentationUrl": "https://github.com/jfeid/claude-jira#readme",
+  "supportUrl": "https://github.com/jfeid/claude-jira/issues",
+  "privacyPolicyUrl": "https://github.com/jfeid/claude-jira/blob/main/PRIVACY.md",
+  "license": "MIT",
+  "keywords": [
+    "jira",
+    "worklog",
+    "time-tracking",
+    "atlassian",
+    "billing"
+  ],
+  "dependencies": [
+    "worklog-timer@claude-timer"
+  ]
+}
