@@ -1,7 +1,8 @@
 ---
-name: jira
+name: jira-workflow
 description: Jira ticket workflow with time tracking. Start or close a ticket (read it, move its status, run the worklog timer, log the rounded time, draft the closing comment), plus show, status, log, comment, transition, done, mine, staging, a full-day worklog report (day) and a monthly billable-hours report (month). Use for /jira, or when the user asks to start or close a Jira ticket, log time to Jira, or compare timer time with Jira worklogs.
 argument-hint: "<start|close|show|status|log|day|month|comment|transition|done|pause|resume|mine|staging|setup|help> [KEY|URL|DATE|MM-YYYY] [...]"
+user-invocable: false
 allowed-tools: Bash(jira.sh:*) Bash(timer.sh:*) mcp__plugin_atlassian_atlassian__getJiraIssue mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql mcp__plugin_atlassian_atlassian__atlassianUserInfo mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources
 ---
 
@@ -531,6 +532,8 @@ data fixed). When something is unknown, leave it out or ask.
 
 ## Files
 
+- `/jira` - this plugin's mod (`hooks/register.ts`) hands the typed
+  arguments to this skill
 - `jira.sh` - this plugin's helper (`key`, `figures`, `day`, `month`,
   `parse-time`, `mark-logged`, `logged`, `context`, `url`, `base-branch`,
   `staging-keys`, `init`, `config`, `session-name`); `jira.sh help` lists them

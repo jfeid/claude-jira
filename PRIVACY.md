@@ -49,6 +49,9 @@ README. It does not read Claude Code's session files, transcripts, history,
 memory, settings or credentials. It handles no Atlassian credentials: the
 MCP server does the sign-in.
 
+The `/jira` command (a mod) reads nothing. It passes what you typed after
+`/jira` to Claude as a prompt, with a note naming the skill to load.
+
 ## Keeping and deleting
 
 The files are kept until you delete them.

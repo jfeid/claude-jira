@@ -52,9 +52,11 @@ Atlassian server and writes the settings file.
 /jira setup | help
 ```
 
-If another `/jira` command exists (your own `~/.claude/commands/jira.md`, for
-example), this one is `/jira-worklog:jira`. You can also ask in plain words
-("close the ticket and log the time", "what is left to log for yesterday?").
+`/jira` hands what you typed to Claude, which loads the plugin's skill
+(`jira-workflow`) and runs the action; the transcript shows `jira status`
+from the plugin, then the skill. You can also ask in plain words ("close the
+ticket and log the time", "what is left to log for yesterday?"), and the
+same skill runs.
 
 **The key** is optional: without one, `/jira` uses the session's task from
 the timer, which is the session's name or the last task you named with the
@@ -173,9 +175,26 @@ Ticket content (description, comments, attachments) and the reports are
 shown in your conversation, and Claude Code sends the conversation to
 Anthropic, as with anything Claude reads.
 
+## What the mod does
+
+The `/jira` command comes from `hooks/register.ts`, a mod. It sends nothing
+over the network and runs no programs. In detail:
+
+- **What it registers:** the slash command `/jira`. A plugin skill would
+  show as `/jira-worklog:<name>`, so the skill is named `jira-workflow` and
+  hidden from the `/` menu, and the mod provides the plain name.
+- **What it gives Claude:** for `/jira <args>`, a prompt `jira <args>`
+  submitted as your own words, and a note only Claude reads, naming the
+  skill to load and the arguments. Nothing else.
+- **What it reads:** nothing: no files, environment variables or settings.
+- **Hooks:** `session.start` registers the command; `command.run` answers
+  `/jira` only. No hook makes or changes a permission decision.
+
 ## Requirements
 
-- Claude Code in the terminal or the Desktop app's Code tab. claude.ai and
+- Claude Code 2.1.287 or later in the terminal (2.1.286 in the Desktop
+  app's Code tab) for `/jira`, which is a mod. On versions without mods, ask
+  Claude in plain words and the skill runs the same actions. claude.ai and
   Cowork do not install plugins with a `bin/` folder.
 - The `worklog-timer` plugin, version 0.5 or later (installed as a
   dependency).
@@ -232,6 +251,7 @@ site works for trying it.
 ```
 claude --plugin-dir . --plugin-dir ../claude-timer   load both for one session
 claude plugin validate --strict .
+claude plugin test .               the mod's tests
 bash tests/jira-cli.sh             jira.sh end to end (needs ../claude-timer or TIMER_BIN)
 ```
 
