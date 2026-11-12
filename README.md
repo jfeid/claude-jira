@@ -38,7 +38,7 @@ Atlassian server and writes the settings file.
 
 ```
 /jira start ABC-123            read the ticket, pick a branch, In Progress, start the timer, brief me
-/jira close                    stop the timer, log the rounded time, move on, preview the closing comment
+/jira close [--done]           stop the timer, log the rounded time, move on (to Done with --done), preview the closing comment
 /jira show | status            re-read the ticket / Jira status, timer, logged and unlogged time
 /jira log [1h 30m]             log work now without closing (timer remainder, or the given time)
 /jira day [DATE] [--here]      one day: timer vs Jira worklogs per ticket, then log the rest after a preview
@@ -75,7 +75,7 @@ A Jira URL works in place of the key.
 | Action | Writes |
 |---|---|
 | `start` | status → In Progress |
-| `close` | worklog, status → the "deployed" status; the comment only after you say yes to the preview |
+| `close` | worklog, status → the "deployed" status (Done with `--done`); the comment only after you say yes to the preview |
 | `log` | worklog |
 | `day` | worklogs for the tickets you pick from the preview |
 | `transition`, `done` | status |

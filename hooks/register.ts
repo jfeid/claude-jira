@@ -29,7 +29,7 @@ export const register: Register = on => {
       await $.command.register({
         name: 'jira',
         description: 'Jira ticket workflow: start, close, status, log, day and month reports',
-        argumentHint: `[${ACTIONS}] [KEY|URL|DATE|MM-YYYY]`,
+        argumentHint: `[${ACTIONS}] [KEY|URL|DATE|MM-YYYY] [--done]`,
       })
     } catch (err) {
       // Another command already owns /jira; the skill still answers plain requests.

@@ -1,7 +1,7 @@
 ---
 name: jira-workflow
 description: Jira ticket workflow with time tracking. Start or close a ticket (read it, move its status, run the worklog timer, log the rounded time, draft the closing comment), plus show, status, log, comment, transition, done, mine, staging, a full-day worklog report (day) and a monthly billable-hours report (month). Use for /jira, or when the user asks to start or close a Jira ticket, log time to Jira, or compare timer time with Jira worklogs.
-argument-hint: "<start|close|show|status|log|day|month|comment|transition|done|pause|resume|mine|staging|setup|help> [KEY|URL|DATE|MM-YYYY] [...]"
+argument-hint: "<start|close|show|status|log|day|month|comment|transition|done|pause|resume|mine|staging|setup|help> [KEY|URL|DATE|MM-YYYY] [--done] [...]"
 user-invocable: false
 allowed-tools: Bash(jira.sh:*) Bash(timer.sh:*) mcp__plugin_atlassian_atlassian__getJiraIssue mcp__plugin_atlassian_atlassian__searchJiraIssuesUsingJql mcp__plugin_atlassian_atlassian__atlassianUserInfo mcp__plugin_atlassian_atlassian__getAccessibleAtlassianResources
 ---
@@ -26,7 +26,7 @@ every `/jira` call in that session targets ABC-538. A Jira issue URL is
 accepted in place of the key.
 
 - `/jira start [KEY] [--branch|--base]` - read the ticket (fields, comments, attachments), ask whether to work on a `KEY` branch or on the base branch and switch to it, move it to In Progress, start the timer, brief the user
-- `/jira close [KEY]` - stop the timer, log the rounded time, move to the "deployed" status, preview the closing comment
+- `/jira close [KEY] [--done]` - stop the timer, log the rounded time, move to the "deployed" status (Done with `--done`), preview the closing comment
 - `/jira show [KEY]` - re-read the ticket without changing anything
 - `/jira status [KEY]` - one-screen state: Jira status, timer, logged vs unlogged time
 - `/jira log [KEY] [1h 30m]` - log work now without closing (timer figure, or the given duration)
@@ -110,8 +110,8 @@ transition whose `to.name` starts with the first list entry (so "Deployed"
 matches "Deployed for testing"); failing that, show the available
 transitions and ask which one to use. If the issue already sits in the
 target status, say so and skip the move. Never move to Done except through
-`done` or an explicit `transition`. When the config has no `transitions`,
-the lists are `["In Progress"]`, `["Deployed", "Ready for testing", "In Review", "Resolved"]`
+`done`, `close --done` or an explicit `transition`. When the config has no
+`transitions`, the lists are `["In Progress"]`, `["Deployed", "Ready for testing", "In Review", "Resolved"]`
 and `["Done"]`.
 
 ## setup
@@ -221,7 +221,8 @@ change it unless asked.
    `jira.sh mark-logged KEY <rounded_seconds> <worklog id> "<note>" "<started>"`
    (the same `started` value that went to Jira, so `day` files the worklog
    under the day the work was done).
-5. Move to the "deployed" status (`transitions.close`).
+5. Move to the "deployed" status (`transitions.close`). With `--done` in the
+   extra input, move to `transitions.done` instead.
 6. Draft the closing comment (style below) from this session's work. In a
    fresh session, gather the facts first with `jira.sh context KEY`
    (branch, commits mentioning the key, files touched, task docs under
