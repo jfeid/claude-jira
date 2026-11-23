@@ -86,9 +86,11 @@ A Jira URL works in place of the key.
 edited or deleted; assignee, priority, sprint and other labels are left as
 they are unless you ask.
 
-**Rounding.** Each worklog is the timer's unlogged time rounded up to the
-quarter hour. A ledger (below) remembers what was logged, so the next `log`
-or `close` takes only the remainder. `day` and `month` show where the timer
+**Rounding.** Unlogged time is logged as one worklog per day it was
+tracked, each rounded up to the quarter hour, because Jira files a worklog
+under the single day it starts on. Work spread over Friday and Monday
+becomes two worklogs, not one dated Friday. A ledger (below) remembers what
+was logged, so the next `log` or `close` takes only the remainder. `day` and `month` show where the timer
 and Jira differ: worklogs entered by hand, days not logged yet, a timer left
 running.
 
@@ -136,7 +138,7 @@ The plugin puts `jira.sh` on the Bash tool's PATH. It never talks to Jira;
 it works out the figures the skill sends:
 
 ```
-jira.sh figures ABC-123          tracked, logged, unlogged, rounded, Jira time and start
+jira.sh figures ABC-123          tracked, logged, unlogged, and the worklogs to write (one per day)
 jira.sh day yesterday            one day across projects, with ready-made worklog values
 jira.sh month 09-2026            billable hours per day and per ticket
 jira.sh logged                   the ledger of worklogs written through /jira

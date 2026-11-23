@@ -104,8 +104,15 @@ unset -f command
 
 echo "== figures and ledger"
 run "figures" 0 figures ABC-1
-has "tracked_seconds=5400"; has "rounded_seconds=5400"; has "time_spent=1h 30m"
-has "started=2026-09-07T09:00:00.000+0000"; has "timer_state=STOPPED"
+# One worklog per day, each day rounded up: 70m -> 1h 15m, 20m -> 30m.
+has "tracked_seconds=5400"; has "rounded_seconds=6300"; has "time_spent=1h 45m"
+has "started=2026-09-07T09:00:00.000+0000"; has "timer_state=STOPPED"; has "worklogs=2"
+has "worklog_1_day=2026-09-07"; has "worklog_1_seconds=4500"; has "worklog_1_time_spent=1h 15m"
+has "worklog_1_started=2026-09-07T09:00:00.000+0000"
+has "worklog_2_day=2026-09-08"; has "worklog_2_seconds=1800"; has "worklog_2_started=2026-09-08T14:00:00.000+0000"
+run "figures across midnight" 0 figures ABC-2
+has "worklog_1_day=2026-09-07"; has "worklog_1_seconds=1800"; has "worklog_1_started=2026-09-07T23:30:00.000+0000"
+has "worklog_2_day=2026-09-08"; has "worklog_2_seconds=2700"; has "worklog_2_started=2026-09-08T00:00:00.000+0000"
 run "mark-logged bad seconds" 1 mark-logged ABC-1 1h
 run "mark-logged bad started" 1 mark-logged ABC-1 60 1 note "next week"
 run "mark-logged" 0 mark-logged ABC-1 4500 10001 "Fix" "2026-09-07T09:00:00.000+0000"
@@ -114,7 +121,33 @@ run "mark-logged +03:00" 0 mark-logged ABC-2 900 10002 "Review" "2026-09-08T03:0
 has "started 2026-09-08 00:00"
 run "logged" 0 logged;               has "10001"; has "10002"
 run "logged ABC-2" 0 logged ABC-2;   has "10002"; hasnt "10001"
-run "figures after" 0 figures ABC-1; has "logged_seconds=4500"; has "unlogged_seconds=900"; has "time_spent=15m"
+run "figures after" 0 figures ABC-1; has "logged_seconds=4500"; has "unlogged_seconds=900"; has "time_spent=30m"
+has "worklogs=1"; has "worklog_1_day=2026-09-08"; hasnt "worklog_2_"
+run "figures after, across midnight" 0 figures ABC-2
+has "worklogs=2"; has "worklog_1_seconds=1800"; has "worklog_2_day=2026-09-08"; has "worklog_2_seconds=1800"
+
+# Worklogs that do not match the days: ABC-3 tracked 2026-09-10 10:00-13:10
+# (3h 10m, bills 3h 15m) and 2026-09-11 09:00-12:07 (3h 07m, bills 3h 15m), in
+# a project of its own.
+printf 'ABC-3\tSTART\t1789034400\t-\nABC-3\tSTOP\t1789045800\t-\nABC-3\tSTART\t1789117200\t-\nABC-3\tSTOP\t1789128420\t-\n' \
+    > "$TIMER_HOME/logs/split.tsv"
+split_ledger="$JIRA_HOME/logs/split.tsv"
+TIMER_PROJECT=split run "split, nothing logged" 0 figures ABC-3
+has "rounded_seconds=23400"; has "worklogs=2"; has "worklog_1_seconds=11700"; has "worklog_2_seconds=11700"
+# One worklog for both days, started on the first: the excess covers the second day.
+printf 'ABC-3\t23400\t10475\t1789130000\t-\tBoth days\t1789034400\n' > "$split_ledger"
+TIMER_PROJECT=split run "split, one worklog for both days" 0 figures ABC-3
+has "rounded_seconds=0"; has "worklogs=0"
+# A worklog with no recorded start covers the first day.
+printf 'ABC-3\t11700\t10476\t1789130000\t-\tOld row\t\n' > "$split_ledger"
+TIMER_PROJECT=split run "split, no started" 0 figures ABC-3
+has "worklogs=1"; has "worklog_1_day=2026-09-11"; has "worklog_1_started=2026-09-11T09:00:00.000+0000"
+# A worklog started after the last tracked day covers the latest day.
+printf 'ABC-3\t11700\t10477\t1789898400\t-\tLater\t1789898400\n' > "$split_ledger"
+TIMER_PROJECT=split run "split, started later" 0 figures ABC-3
+has "worklogs=1"; has "worklog_1_day=2026-09-10"; has "worklog_1_started=2026-09-10T10:00:00.000+0000"
+TIMER_PROJECT=split run "split, month" 0 month 09-2026 --here; has "3h 15m"
+rm -f "$TIMER_HOME/logs/split.tsv" "$split_ledger"   # keep the all-project reports below as they were
 
 echo "== day"
 run "day 2026-09-07" 0 day 2026-09-07

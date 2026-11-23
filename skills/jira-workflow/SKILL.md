@@ -209,16 +209,21 @@ change it unless asked.
 2. Stop the timer: `timer.sh off KEY`. "not active" is fine; the recorded
    total is used.
 3. Figures: `jira.sh figures KEY`. It subtracts time already logged through
-   this workflow (the ledger) and rounds the remainder UP to the quarter
-   hour, giving `time_spent` (Jira syntax) and `started` (ISO 8601 of the
-   first unlogged timer start).
-4. Worklog. When `rounded_seconds` is 0, say there is nothing new to log and
-   skip. Otherwise write it directly (invoking `close` is the request):
-   `addOrEditJiraIssueWorklog` with `timeSpent`, `started` and a one-line
-   `comment` in `worklog_language` describing the work, in the style
+   this workflow (the ledger) and splits the remainder by the day it was
+   tracked, each day rounded UP to the quarter hour: `worklogs=N` and, per
+   day, `worklog_<i>_day`, `_seconds`, `_time_spent` (Jira syntax) and
+   `_started` (ISO 8601 of that day's first unlogged timer start).
+   `rounded_seconds` is their sum.
+4. Worklogs. When `rounded_seconds` is 0, say there is nothing new to log and
+   skip. Otherwise write them directly (invoking `close` is the request), one
+   per `worklog_<i>`, oldest first. A Jira worklog has a single start and
+   duration and is filed under the day it starts, so never merge days into
+   one worklog. For each: `addOrEditJiraIssueWorklog` with that worklog's
+   `timeSpent`, `started` and a one-line `comment` in `worklog_language`
+   describing that day's work, in the style
    `Investigation, fix (short link URL rotation), tests, staging and production deploy.`
    Only name phases that happened. Then record it:
-   `jira.sh mark-logged KEY <rounded_seconds> <worklog id> "<note>" "<started>"`
+   `jira.sh mark-logged KEY <worklog_<i>_seconds> <worklog id> "<note>" "<worklog_<i>_started>"`
    (the same `started` value that went to Jira, so `day` files the worklog
    under the day the work was done).
 5. Move to the "deployed" status (`transitions.close`). With `--done` in the
@@ -241,6 +246,7 @@ Report format:
 |---|---|
 | Timer | stopped · 1h 09m tracked · 1h 15m rounded |
 | Worklog | 1h 15m logged · started 2026-09-07 11:24 · id 10189 |
+| Worklog | 30m logged · started 2026-09-08 09:10 · id 10190 (one row per day) |
 | Status | In Progress → Deployed for testing |
 | Comment | waiting for confirmation |
 <site_url>/browse/KEY
@@ -258,8 +264,9 @@ question.
    `YYYY-MM-DD`, `"last friday"`).
 2. Local figures: `jira.sh day [DATE] [--here]`. It prints a `key=value`
    header, a table, one `[KEY]` block per ticket with the seconds and the
-   ready-made `time_spent` and `started` values, the timeline and the ledger
-   rows for that day. `tickets=0` means no timer ran that day; still do step
+   ready-made worklogs (`worklogs=N`, `worklog_<i>_day`, `_seconds`,
+   `_time_spent`, `_started`: one per day with unlogged time, as in
+   `figures`), the timeline and the ledger rows for that day. `tickets=0` means no timer ran that day; still do step
    3, since worklogs may have been written by hand.
 3. Jira figures, in parallel:
    - `searchJiraIssuesUsingJql` with
@@ -289,8 +296,8 @@ question.
    Tracked and Rounded come from the timer for that day. Jira is the sum of
    my worklogs started that day. To log is `unlogged_rounded_seconds` from
    the `[KEY]` block: the ticket's whole unlogged remainder, which can
-   include earlier days; when it differs from Rounded, say so under the
-   table. Rows with a Jira worklog but no timer get `logged by hand, no
+   include earlier days; when it does, say so under the table (which days,
+   how much each). Rows with a Jira worklog but no timer get `logged by hand, no
    timer` as a note. Sort rows by first touch, hand-logged rows last.
 
    Under the table, a **Checks** list, only for what applies:
@@ -305,12 +312,15 @@ question.
    When nothing applies, omit the list.
 
 5. Logging the remainder. When every To log is zero, end with
-   `Nothing left to log for DATE.` Otherwise show a preview:
+   `Nothing left to log for DATE.` Otherwise show a preview with one row per
+   `worklog_<i>` (a key with time left from earlier days gets a row per day):
 
    ```
    | Key | Time | Started | Worklog comment |
    |---|---|---|---|
    | ABC-2187 | 1h 45m | 2026-09-08 09:36 | Investigation and fix of ... |
+   | ABC-2150 | 30m | 2026-09-07 16:10 | Review fixes ... |
+   | ABC-2150 | 1h | 2026-09-08 11:02 | Tests and staging deploy ... |
    ```
 
    The comment is one line in `worklog_language` as in `close` step 4,
@@ -319,9 +329,10 @@ question.
    thin, put `?` and ask for the wording. Then ask:
    `Reply "log all", "log KEY,KEY" or "skip".` Do nothing until the answer
    is one of those; an edited comment is a new preview.
-6. On `log ...`: for each chosen key, `addOrEditJiraIssueWorklog` with
-   `timeSpent`, `started` and the comment, then
-   `jira.sh mark-logged KEY <unlogged_rounded_seconds> <id> "<comment>" "<started>"`.
+6. On `log ...`: for each chosen key and each of its `worklog_<i>`, oldest
+   first, `addOrEditJiraIssueWorklog` with that worklog's `timeSpent`,
+   `started` and the comment, then
+   `jira.sh mark-logged KEY <worklog_<i>_seconds> <id> "<comment>" "<worklog_<i>_started>"`.
    Timers and statuses stay as they are. Report a results table (key, time,
    worklog id) and the new day total. A failed write stops the batch; report
    which keys were written and which were not.
@@ -410,10 +421,11 @@ logs nothing. Remainders are logged per day with `/jira day DATE`.
 - `status` - `getJiraIssue` (compact) plus `jira.sh figures KEY`; print one
   small table: Jira status, assignee, last updated, timer state, tracked,
   logged, unlogged (rounded), browse URL. No writes.
-- `log [time]` - `jira.sh figures KEY`; use the given duration
-  (`jira.sh parse-time "1h 30m"` for the seconds) or the rounded remainder.
-  Zero means nothing to log. Otherwise write the worklog as in `close` step 4
-  and run `mark-logged` with the seconds actually logged and the `started`
+- `log [time]` - `jira.sh figures KEY`. Without a duration, log the
+  per-day worklogs as in `close` step 4 (zero means nothing to log). With a
+  duration (`jira.sh parse-time "1h 30m"` for the seconds), write one
+  worklog of that length started at `started` (the first day still to log)
+  and run `mark-logged` with the seconds actually logged and that `started`
   value. The timer keeps its state.
 - `comment <notes>` - draft from the notes (or from the session when no
   notes are given), preview, post on an explicit yes.
